@@ -1,0 +1,31 @@
+#!/bin/sh
+
+# FVKeyboard is a script that gets the current keyboard layout from the user and sets it at the top
+# of the plist that handles the keyboard layouts on the FileVault screen, thus making sure the user
+# gets the preferred layout at each boot.
+# Recommended to set as a SelfService policy or an automated execution after FileVault is enabled.
+# Tested on macOS 10.14 and 10.15 beta
+
+langPlist="/Library/Preferences/com.apple.HIToolbox.plist"
+
+# Using the $3 as the username from JAMF.
+userName=$3
+plistBuddy='/usr/libexec/PlistBuddy'
+ 
+topLanguageName=$($plistBuddy -c "Print :AppleEnabledInputSources"  "/Users/$userName/Library/Preferences/com.apple.HIToolbox.plist" | grep -m 1  "KeyboardLayout Name" | awk -F' = ' '{print $2}')
+topLanguageID=$($plistBuddy -c "Print :AppleEnabledInputSources"  "/Users/$userName/Library/Preferences/com.apple.HIToolbox.plist" | grep -m 1  "KeyboardLayout ID" | awk -F' = ' '{print $2}')
+
+echo "Will set to $topLanguageName - $topLanguageID"
+
+# In case the PLIST doesn't exist, create it and define the array of input sources.
+if [[ ! -f "$langPlist" ]]; then
+  touch "$langPlist"
+  defaults write $langPlist AppleEnabledInputSources -array 2>/dev/null
+fi
+
+$plistBuddy -c "Add :AppleEnabledInputSources:0 dict" $langPlist
+$plistBuddy -c "Add :AppleEnabledInputSources:0:InputSourceKind string 'Keyboard Layout'" $langPlist
+$plistBuddy -c "Add :AppleEnabledInputSources:0:'KeyboardLayout Name' string '${topLanguageName}'" $langPlist
+$plistBuddy -c "Add :AppleEnabledInputSources:0:'KeyboardLayout ID' integer ${topLanguageID}" $langPlist
+
+exit 0
