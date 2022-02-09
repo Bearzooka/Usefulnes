@@ -21,6 +21,9 @@ echo "Will set to $topLanguageName - $topLanguageID"
 if [[ ! -f "$langPlist" ]]; then
   touch "$langPlist"
   defaults write $langPlist AppleEnabledInputSources -array 2>/dev/null
+else
+  # Added for Monterey: In case it exists, first delete the dictionary to be able add it later.
+  $plistBuddy -c "Delete :AppleEnabledInputSources:0" $langPlist
 fi
 
 $plistBuddy -c "Add :AppleEnabledInputSources:0 dict" $langPlist
