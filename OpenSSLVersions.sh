@@ -1,6 +1,6 @@
 #!/bin/bash
 
-currentUser=$(ls -l /dev/console | awk {' print $3 '})
+currentUser=$(ls -l /dev/console | awk '{ print $3 }')
 
 createOpenSSLList (){
     # Setting IFS Env to only use new lines as field seperator 
